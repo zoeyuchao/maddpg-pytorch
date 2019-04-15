@@ -1,0 +1,29 @@
+4.3日日志
+对core.py进行了注释
+对simple_spread.py:
+将reward的形式从无差别变为对每个agent都有固定的target
+增加了到达target距离<0.1时会得到大的正reward
+Q：对网络的输入obseration的具体形式不清楚
+训练结果：
+model_4.3:
+    run1: 无差别target
+    run2：有差别target，碰撞reward = -1（原始）
+    run3~5：有差别target，碰撞reward = -20, -10, -5
+    run6：有差别target，碰撞reward = -5，到达target距离<0.1得到reward= +5
+
+4.4日日志
+对simple_spread.py:
+新增reset_world初始化固定agent 和 landmark的位置
+环境构建调用顺序：
+main.py -> make_env.py -> simple_spread.py -> core.py -> main.py ->，maddpg.py
+
+Q：训练后的policy改变agent数目evaluate时会报错，显示数值数量不对（怀疑网络输入是将所有agent的obs输入）
+训练结果：
+model_4.4:
+    run1: 有差别target，碰撞reward = -15，到达target距离<0.05得到reward= +15
+    run2：有差别target，碰撞reward = -5，到达target距离<0.05得到reward= +15
+    run3：有差别target，碰撞reward = -5，到达target距离<0.1得到reward= +15
+    run4：固定了agent 和 landmark的位置，有差别target，碰撞reward = -15，到达target距离<0.1得到reward= +15
+    run5：固定了agent 和 landmark的位置，有差别target，碰撞reward = -1，到达target距离<0.1得到reward= +15
+    run6：固定了agent 和 landmark的位置，有差别target，碰撞reward = -1，到达target距离<0.1得到reward= +15，50000 Episodes
+    run7: 有差别target，碰撞reward = -15，到达target距离<0.05得到reward= +15，4 agents

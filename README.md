@@ -5,12 +5,11 @@ Cooperative-Competitive Environments*](https://arxiv.org/abs/1706.02275) (Lowe e
 ## Requirements
 
 * [OpenAI baselines](https://github.com/openai/baselines), commit hash: 98257ef8c9bd23a24a330731ae54ed086d9ce4a7
-* My [fork](https://github.com/shariqiqbal2810/multiagent-particle-envs) of Multi-agent Particle Environments
-* [PyTorch](http://pytorch.org/), version: 0.3.0.post4
-* [OpenAI Gym](https://github.com/openai/gym), version: 0.9.4
-* [Tensorboard](https://github.com/tensorflow/tensorboard), version: 0.4.0rc3 and [Tensorboard-Pytorch](https://github.com/lanpa/tensorboard-pytorch), version: 1.0 (for logging)
-
-The versions are just what I used and not necessarily strict requirements.
+* My [fork](https://github.com/zoeyuchao/MPE-pytorch.git) of Multi-agent Particle Environments
+* [PyTorch](http://pytorch.org/)
+* [OpenAI Gym](https://github.com/openai/gym) 
+* [Tensorboard](https://github.com/tensorflow/tensorboard) 
+* [Tensorboard-Pytorch](https://github.com/lanpa/tensorboard-pytorch)
 
 ## How to Run
 

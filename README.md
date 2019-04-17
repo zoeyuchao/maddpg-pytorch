@@ -13,7 +13,7 @@ Cooperative-Competitive Environments*](https://arxiv.org/abs/1706.02275) (Lowe e
 * [OpenAI baselines](https://github.com/openai/baselines), commit hash: 98257ef8c9bd23a24a330731ae54ed086d9ce4a7
 * My [fork](https://github.com/zoeyuchao/MPE-pytorch.git) of Multi-agent Particle Environments
 * [PyTorch](http://pytorch.org/)
-* [OpenAI Gym](https://github.com/openai/gym) 
+* [OpenAI Gym](https://github.com/openai/gym) 0.10.5
 * [Tensorboard](https://github.com/tensorflow/tensorboard) 
 * [Tensorboard-Pytorch](https://github.com/lanpa/tensorboard-pytorch)
 

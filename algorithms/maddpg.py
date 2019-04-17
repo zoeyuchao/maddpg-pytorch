@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from gym.spaces import Box, Discrete
+from gym.spaces import Tuple, Box, Discrete
 from utils.networks import MLPNetwork
 from utils.misc import soft_update, average_gradients, onehot_from_logits, gumbel_softmax
 from utils.agents import DDPGAgent
@@ -238,6 +238,8 @@ class MADDPG(object):
         save_dict = {'init_dict': self.init_dict,
                      'agent_params': [a.get_params() for a in self.agents]}
         torch.save(save_dict, filename)
+        
+    
 
     @classmethod
     def init_from_env(cls, env, agent_alg="MADDPG", adversary_alg="MADDPG",
@@ -248,24 +250,48 @@ class MADDPG(object):
         agent_init_params = []
         alg_types = [adversary_alg if atype == 'adversary' else agent_alg for
                      atype in env.agent_types]
+
+        def get_shape(sp):
+            shape = 0
+            if isinstance(sp, Box):
+                discrete_action = False
+                shape = sp.shape[0]
+            elif isinstance(sp, Tuple):
+                discrete_action = False
+                for p in sp.spaces:
+                    if isinstance(p,Box):
+                        shape += p.shape[0]
+                    else:
+                        shape += p.n
+            else:  # Discrete
+                discrete_action = True
+                shape = sp.n
+            return discrete_action, shape
+        
         for acsp, obsp, algtype in zip(env.action_space, env.observation_space,
                                        alg_types):
             num_in_pol = obsp.shape[0]
+            #print(acsp)
+            '''
             if isinstance(acsp, Box):
                 discrete_action = False
                 get_shape = lambda x: x.shape[0]
             else:  # Discrete
                 discrete_action = True
                 get_shape = lambda x: x.n
-            num_out_pol = get_shape(acsp)
+            '''
+            discrete_action, num_out_pol = get_shape(acsp)
+            #num_out_pol = get_shape(acsp)
+            #print(num_out_pol)
             if algtype == "MADDPG":
                 num_in_critic = 0
                 for oobsp in env.observation_space:
                     num_in_critic += oobsp.shape[0]
                 for oacsp in env.action_space:
-                    num_in_critic += get_shape(oacsp)
+                    #print(oacsp)
+                    num_in_critic += get_shape(oacsp)[1]
             else:
-                num_in_critic = obsp.shape[0] + get_shape(acsp)
+                num_in_critic = obsp.shape[0] + get_shape(acsp)[1]
             agent_init_params.append({'num_in_pol': num_in_pol,
                                       'num_out_pol': num_out_pol,
                                       'num_in_critic': num_in_critic})

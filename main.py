@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import argparse
 import torch
 import time
 import os
 import numpy as np
-from gym.spaces import Box, Discrete
+from gym.spaces import Tuple, Box, Discrete
 from pathlib import Path
 from torch.autograd import Variable
 from tensorboardX import SummaryWriter
@@ -13,7 +15,15 @@ from utils.env_wrappers import SubprocVecEnv, DummyVecEnv
 from algorithms.maddpg import MADDPG
 import matplotlib.pyplot as plt
 
-USE_CUDA = False  # torch.cuda.is_available()
+from knockknock import slack_sender
+
+webhook_url = "https://hooks.slack.com/services/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"
+#@slack_sender(webhook_url=webhook_url, channel="train", user_mentions=["zoeyuchao"])
+def train_your_nicest_model():
+    run(config)
+
+USE_CUDA = False # torch.cuda.is_available()
+print("USE_CUDA is set %d ..." % torch.cuda.is_available())
 
 def make_parallel_env(env_id, n_rollout_threads, seed, discrete_action):
     def get_env_fn(rank):
@@ -40,35 +50,55 @@ def run(config):
             curr_run = 'run1'
         else:
             curr_run = 'run%i' % (max(exst_run_nums) + 1)
+
     run_dir = model_dir / curr_run
     log_dir = run_dir / 'logs'
 
     os.makedirs(str(log_dir))
-    logger = SummaryWriter(str(log_dir))
-
-    torch.manual_seed(config.seed)
+    logger = SummaryWriter(str(log_dir)) 
+    torch.manual_seed(config.seed)# seed set up as 1
     np.random.seed(config.seed)
+    
     if not USE_CUDA:
         torch.set_num_threads(config.n_training_threads)
+   
     env = make_parallel_env(config.env_id, config.n_rollout_threads, config.seed,
                             config.discrete_action)
+   
     maddpg = MADDPG.init_from_env(env, agent_alg=config.agent_alg,
                                   adversary_alg=config.adversary_alg,
                                   tau=config.tau,
                                   lr=config.lr,
                                   hidden_dim=config.hidden_dim)
+    action_shape = []
+    for acsp in env.action_space:
+        if isinstance(acsp, Box):
+            shape = acsp.shape[0]
+        elif isinstance(acsp, Tuple):
+            shape = 0
+            for p in acsp.spaces:
+                if isinstance(p,Box):
+                    shape += p.shape[0]
+                else:
+                    shape += p.n
+        else:
+            shape = acsp.n
+        action_shape.append(shape)
     replay_buffer = ReplayBuffer(config.buffer_length, maddpg.nagents,
                                  [obsp.shape[0] for obsp in env.observation_space],
-                                 [acsp.shape[0] if isinstance(acsp, Box) else acsp.n
-                                  for acsp in env.action_space])
+                                 action_shape)
+    
     t = 0
     a_loss = []
     c_loss = []
+    
     for ep_i in range(0, config.n_episodes, config.n_rollout_threads):
         print("Episodes %i-%i of %i" % (ep_i + 1,
                                         ep_i + 1 + config.n_rollout_threads,
                                         config.n_episodes))
+        
         obs = env.reset()
+        
         # obs.shape = (n_rollout_threads, nagent)(nobs), nobs differs per agent so not tensor
         maddpg.prep_rollouts(device='cpu')
 
@@ -76,8 +106,8 @@ def run(config):
         maddpg.scale_noise(config.final_noise_scale + (config.init_noise_scale - config.final_noise_scale) * explr_pct_remaining)
         maddpg.reset_noise()
 
-        for env_show in env.envs:
-            env_show.render('human', close=False)
+        #for env_show in env.envs:
+           # env_show.render('human', close=False)
 
         # env.envs[0].render('human', close=False)
         for et_i in range(config.episode_length):
@@ -93,8 +123,8 @@ def run(config):
             actions = [[ac[i] for ac in agent_actions] for i in range(config.n_rollout_threads)]
             next_obs, rewards, dones, infos = env.step(actions)
 
-            for env_show in env.envs:
-                env_show.render('human', close=False)
+            #for env_show in env.envs:
+                #env_show.render('human', close=False)
             # env.envs[0].render('human', close=False)
             replay_buffer.push(obs, agent_actions, rewards, next_obs, dones)
             obs = next_obs
@@ -134,7 +164,7 @@ def run(config):
     plt.ylabel('actor_loss')
     # plt.savefig("./results/" + config.env_id + "_" + config.model_name + "_actor_loss.jpg")
     plt.savefig("./results/" + config.model_name + "_" + curr_run + "_actor_loss.jpg")
-    plt.show()
+    #plt.show()
     
 
     index_closs = list(range(1, len(c_loss) + 1))
@@ -143,7 +173,7 @@ def run(config):
     plt.ylabel('critic_loss')
     # plt.savefig("./results/" + config.env_id + "_" + config.model_name + "_critic_loss.jpg")
     plt.savefig("./results/" + config.model_name + "_" + curr_run + "_critic_loss.jpg")
-    plt.show()
+    #plt.show()
     
 
 
@@ -182,5 +212,5 @@ if __name__ == '__main__':
                         action='store_true')
 
     config = parser.parse_args()
-
-    run(config)
+    
+    train_your_nicest_model()

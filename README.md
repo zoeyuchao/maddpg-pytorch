@@ -1,6 +1,12 @@
 # MADDPG-PyTorch
 PyTorch Implementation of MADDPG from [*Multi-Agent Actor-Critic for Mixed
 Cooperative-Competitive Environments*](https://arxiv.org/abs/1706.02275) (Lowe et. al. 2017)
+## Log 
+
+20190418 修改了maddpg文件中的get_shape函数，为了运行起其他环境。
+
+特别注意：discrete_action这个并不属于world，而是外部的。
+
 
 ## Requirements
 
@@ -52,3 +58,6 @@ There are a few items from the paper that have not been implemented in this repo
 ## Acknowledgements
 
 The OpenAI baselines [Tensorflow implementation](https://github.com/openai/baselines/tree/master/baselines/ddpg) and Ilya Kostrikov's [Pytorch implementation](https://github.com/ikostrikov/pytorch-ddpg-naf) of DDPG were used as references. After the majority of this codebase was complete, OpenAI released their [code](https://github.com/openai/maddpg) for MADDPG, and I made some tweaks to this repo to reflect some of the details in their implementation (e.g. gradient norm clipping and policy regularization).
+
+
+

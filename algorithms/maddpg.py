@@ -4,7 +4,7 @@ from gym.spaces import Tuple, Box, Discrete
 from utils.networks import MLPNetwork
 from utils.misc import soft_update, average_gradients, onehot_from_logits, gumbel_softmax
 from utils.agents import DDPGAgent
-
+from multiagent.multi_discrete import MultiDiscrete  
 MSELoss = torch.nn.MSELoss()
 
 class MADDPG(object):

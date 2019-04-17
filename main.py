@@ -15,6 +15,7 @@ from utils.env_wrappers import SubprocVecEnv, DummyVecEnv
 from algorithms.maddpg import MADDPG
 import matplotlib.pyplot as plt
 
+from multiagent.multi_discrete import MultiDiscrete
 from knockknock import slack_sender
 
 webhook_url = "https://hooks.slack.com/services/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"

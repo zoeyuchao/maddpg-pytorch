@@ -18,10 +18,6 @@ def run(config):
     else:
         model_path = model_path / 'model.pt'
 
-    print(config.save_gifs)
-    print(model_path.parent)
-    # print(type(model_path.parent))
-
     if config.save_gifs:
         gif_path = model_path.parent / 'gifs'
         gif_path.mkdir(exist_ok=True)
@@ -38,7 +34,7 @@ def run(config):
         if config.display:
             if config.save_gifs:
                 frames = []
-                frames.append(env.render('human', close=False))
+                frames.append(env.render('rgb_array', close=False))
             env.render('human', close=False)
             
         for t_i in range(config.episode_length):
@@ -55,7 +51,7 @@ def run(config):
             
             if config.display:
                 if config.save_gifs:
-                    frames.append(env.render('human', close=False))
+                    frames.append(env.render('rgb_array', close=False))
                 calc_end = time.time()
                 elapsed = calc_end - calc_start
                 if elapsed < ifi:

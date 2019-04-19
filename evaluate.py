@@ -34,7 +34,7 @@ def run(config):
         if config.display:
             if config.save_gifs:
                 frames = []
-                frames.append(env.render('rgb_array', close=False))
+                frames.append(env.render('rgb_array', close=False)[0])
             env.render('human', close=False)
             
         for t_i in range(config.episode_length):
@@ -51,7 +51,7 @@ def run(config):
             
             if config.display:
                 if config.save_gifs:
-                    frames.append(env.render('rgb_array', close=False))
+                    frames.append(env.render('rgb_array', close=False)[0])
                 calc_end = time.time()
                 elapsed = calc_end - calc_start
                 if elapsed < ifi:

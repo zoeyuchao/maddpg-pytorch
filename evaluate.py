@@ -26,6 +26,9 @@ def run(config):
     env = make_env(config.env_id, discrete_action=maddpg.discrete_action)
     maddpg.prep_rollouts(device='cpu')
     ifi = 1 / config.fps  # inter-frame interval
+    
+    #gifs for all
+    all_frames = []
 
     for ep_i in range(config.n_episodes):
         print("Episode %i of %i" % (ep_i + 1, config.n_episodes))
@@ -34,7 +37,9 @@ def run(config):
         if config.display:
             if config.save_gifs:
                 frames = []
-                frames.append(env.render('rgb_array', close=False)[0])
+                image = env.render('rgb_array', close=False)[0]
+                frames.append(image)
+                all_frames.append(image)
             env.render('human', close=False)
             
         for t_i in range(config.episode_length):
@@ -51,18 +56,29 @@ def run(config):
             
             if config.display:
                 if config.save_gifs:
-                    frames.append(env.render('rgb_array', close=False)[0])
+                    image = env.render('rgb_array', close=False)[0]
+                    frames.append(image)
+                    all_frames.append(image)
                 calc_end = time.time()
                 elapsed = calc_end - calc_start
                 if elapsed < ifi:
                     time.sleep(ifi - elapsed)
                 env.render('human', close=False)
+                '''
                 if config.save_gifs:
                     gif_num = 0
                     while (gif_path / ('%i_%i.gif' % (gif_num, ep_i))).exists():
                         gif_num += 1
-                    imageio.mimsave(str(gif_path / ('%i_%i.gif' % (gif_num, ep_i))),
+                    if ep_i == (config.n_episodes-1):
+                    	imageio.mimsave(str(gif_path / ('%i_%i.gif' % (gif_num, ep_i))),
                             frames, duration=ifi)
+                '''
+        if config.save_gifs:
+            imageio.mimsave(str(gif_path / ('%i.gif' % ep_i)),
+                            frames, duration=ifi)
+    if config.save_gifs:
+        imageio.mimsave(str(gif_path / config.env_id) + '.gif',
+                            all_frames, duration=ifi)
 
     env.close()
 

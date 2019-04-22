@@ -122,7 +122,7 @@ class MADDPG(object):
                         (1 - dones[agent_i].view(-1, 1)))
 
         if self.alg_types[agent_i] == 'MADDPG':
-            vf_in = torch.cat((*obs, *acs), dim=1)
+            vf_in = torch.cat((obs, acs), dim=1)
         else:  # DDPG
             vf_in = torch.cat((obs[agent_i], acs[agent_i]), dim=1)
         actual_value = curr_agent.critic(vf_in)
@@ -136,6 +136,9 @@ class MADDPG(object):
             average_gradients(curr_agent.critic)
         torch.nn.utils.clip_grad_norm(curr_agent.critic.parameters(), 0.5)
         curr_agent.critic_optimizer.step()
+
+
+
 
         curr_agent.policy_optimizer.zero_grad()
 
@@ -219,7 +222,7 @@ class MADDPG(object):
 
     def prep_rollouts(self, device='cpu'):
         for a in self.agents:
-            a.policy.eval()
+            a.policy.eval()#??
         if device == 'gpu':
             fn = lambda x: x.cuda()
         else:
@@ -248,6 +251,7 @@ class MADDPG(object):
         Instantiate instance of this class from multi-agent environment
         """
         agent_init_params = []
+
         alg_types = [adversary_alg if atype == 'adversary' else agent_alg for
                      atype in env.agent_types]
 

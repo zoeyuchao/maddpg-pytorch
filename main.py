@@ -23,9 +23,6 @@ webhook_url = "https://hooks.slack.com/services/THP5T1RAL/BHGTQQY5P/BiFIBoQ4usrj
 def train_your_nicest_model():
     run(config)
 
-USE_CUDA = False # torch.cuda.is_available()
-print("USE_CUDA is set %d ..." % torch.cuda.is_available())
-
 def make_parallel_env(env_id, n_rollout_threads, seed, discrete_action):
     def get_env_fn(rank):
         def init_env():
@@ -60,7 +57,7 @@ def run(config):
     torch.manual_seed(config.seed)# seed set up as 1
     np.random.seed(config.seed)
     
-    if not USE_CUDA:
+    if not config.use_cuda:
         torch.set_num_threads(config.n_training_threads)
    
     env = make_parallel_env(config.env_id, config.n_rollout_threads, config.seed,
@@ -101,16 +98,16 @@ def run(config):
         obs = env.reset()
         
         # obs.shape = (n_rollout_threads, nagent)(nobs), nobs differs per agent so not tensor
-        maddpg.prep_rollouts(device='cpu')
+        maddpg.prep_rollouts(device='cpu')# show for the first time
 
         explr_pct_remaining = max(0, config.n_exploration_eps - ep_i) / config.n_exploration_eps
         maddpg.scale_noise(config.final_noise_scale + (config.init_noise_scale - config.final_noise_scale) * explr_pct_remaining)
         maddpg.reset_noise()
 
-        #for env_show in env.envs:
-           # env_show.render('human', close=False)
+        if config.display:
+            for env_show in env.envs:
+                env_show.render('human', close=False)
 
-        # env.envs[0].render('human', close=False)
         for et_i in range(config.episode_length):
             # rearrange observations to be per agent, and convert to torch Variable
             torch_obs = [Variable(torch.Tensor(np.vstack(obs[:, i])),
@@ -124,22 +121,23 @@ def run(config):
             actions = [[ac[i] for ac in agent_actions] for i in range(config.n_rollout_threads)]
             next_obs, rewards, dones, infos = env.step(actions)
 
-            #for env_show in env.envs:
-                #env_show.render('human', close=False)
-            # env.envs[0].render('human', close=False)
+            if config.display:
+                for env_show in env.envs:
+                    env_show.render('human', close=False)
+
             replay_buffer.push(obs, agent_actions, rewards, next_obs, dones)
             obs = next_obs
             t += config.n_rollout_threads
             if (len(replay_buffer) >= config.batch_size and
                 (t % config.steps_per_update) < config.n_rollout_threads):
-                if USE_CUDA:
+                if config.use_cuda:
                     maddpg.prep_training(device='gpu')
                 else:
                     maddpg.prep_training(device='cpu')
                 for u_i in range(config.n_rollout_threads):
                     for a_i in range(maddpg.nagents):
                         sample = replay_buffer.sample(config.batch_size,
-                                                      to_gpu=USE_CUDA)
+                                                      to_gpu=config.use_cuda)
                         maddpg.update(sample, a_i, logger=logger, actor_loss_list=a_loss, critic_loss_list=c_loss)
                     maddpg.update_all_targets()
                 maddpg.prep_rollouts(device='cpu')
@@ -210,6 +208,10 @@ if __name__ == '__main__':
                         default="MADDPG", type=str,
                         choices=['MADDPG', 'DDPG'])
     parser.add_argument("--discrete_action",
+                        action='store_true')
+    parser.add_argument("--display",
+                        action='store_true')
+    parser.add_argument("--use_cuda",
                         action='store_true')
 
     config = parser.parse_args()

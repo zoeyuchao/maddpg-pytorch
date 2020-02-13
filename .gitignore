@@ -1,3 +1,4 @@
 ## ignore this file
-.results
-.models
+/results
+/models
+*.pyc

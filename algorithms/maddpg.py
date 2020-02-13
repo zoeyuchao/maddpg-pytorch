@@ -1,5 +1,5 @@
 import torch
-import torch.nn.functional as F
+# import torch.nn.functional as F
 from gym.spaces import Tuple, Box, Discrete
 from utils.networks import MLPNetwork
 from utils.misc import soft_update, average_gradients, onehot_from_logits, gumbel_softmax
@@ -103,6 +103,7 @@ class MADDPG(object):
             else:
                 all_trgt_acs = [pi(nobs) for pi, nobs in zip(self.target_policies,
                                                              next_obs)]
+            
             trgt_vf_in = torch.cat((*next_obs, *all_trgt_acs), dim=1)
             # print(all_trgt_acs[0].size())
             # print(trgt_vf_in.size())
@@ -122,7 +123,8 @@ class MADDPG(object):
                         (1 - dones[agent_i].view(-1, 1)))
 
         if self.alg_types[agent_i] == 'MADDPG':
-            vf_in = torch.cat((obs, acs), dim=1)
+            vf_in = torch.cat((*obs, *acs), dim=1) ## add¸ÄÁË *
+            # print(vf_in.size())
         else:  # DDPG
             vf_in = torch.cat((obs[agent_i], acs[agent_i]), dim=1)
         actual_value = curr_agent.critic(vf_in)
@@ -134,7 +136,7 @@ class MADDPG(object):
         vf_loss.backward()
         if parallel:
             average_gradients(curr_agent.critic)
-        torch.nn.utils.clip_grad_norm(curr_agent.critic.parameters(), 0.5)
+        torch.nn.utils.clip_grad_norm_(curr_agent.critic.parameters(), 0.5)
         curr_agent.critic_optimizer.step()
 
 
@@ -175,7 +177,7 @@ class MADDPG(object):
         pol_loss.backward()
         if parallel:
             average_gradients(curr_agent.policy)
-        torch.nn.utils.clip_grad_norm(curr_agent.policy.parameters(), 0.5)
+        torch.nn.utils.clip_grad_norm_(curr_agent.policy.parameters(), 0.5)
         curr_agent.policy_optimizer.step()
         if logger is not None:
             logger.add_scalars('agent%i/losses' % agent_i,
